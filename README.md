@@ -155,8 +155,3 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 ## 🌟 Show your support
 
 If this tool saved you time, give it a ⭐ on GitHub!
-
----
-
-**Built with ❤️ for the ArvanCloud community.**  
-_Not affiliated with ArvanCloud LLC._
