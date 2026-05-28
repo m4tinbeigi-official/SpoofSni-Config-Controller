@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>مدیریت نهایی سرور آروان | خودکار + DNS + SSL + SNI Spoof</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Vazir', system-ui, sans-serif; }
+        body { background: linear-gradient(145deg, #0b2b3b 0%, #1a4a5f 100%); padding: 1rem; min-height: 100vh; }
+        .container { max-width: 1280px; margin: 0 auto; background: rgba(255,255,255,0.97); border-radius: 2rem; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .header { background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 1.5rem; color: white; }
+        .header h1 { font-size: 1.6rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+        .content { padding: 2rem; }
+        .guide-card { background: #eef2ff; border-right: 6px solid #b91c1c; border-radius: 1rem; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px,1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
+        label { font-weight: bold; display: flex; gap: 0.3rem; align-items: center; }
+        input { padding: 0.7rem; border: 2px solid #e2e8f0; border-radius: 1rem; font-size: 0.9rem; }
+        input:focus { border-color: #b91c1c; outline: none; }
+        button { background: #b91c1c; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 2rem; font-weight: bold; cursor: pointer; transition: 0.2s; margin: 0.2rem; }
+        button:hover { transform: translateY(-2px); background: #7f1a1a; }
+        button.secondary { background: #2c5f8a; }
+        button.outline { background: transparent; border: 2px solid #b91c1c; color: #b91c1c; }
+        .progress-bar { background: #e2e8f0; border-radius: 1rem; height: 0.8rem; margin: 1rem 0; overflow: hidden; }
+        .progress-fill { width: 0%; height: 100%; background: #b91c1c; transition: width 0.3s; }
+        .steps { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: space-between; margin: 1.5rem 0; }
+        .step { flex: 1; background: #f1f5f9; border-radius: 1rem; padding: 0.5rem; text-align: center; font-size: 0.7rem; border-bottom: 3px solid #cbd5e1; }
+        .step.active { background: #fee2e2; border-bottom-color: #b91c1c; }
+        .step.completed { background: #dcfce7; border-bottom-color: #16a34a; }
+        .log-box { background: #0f172a; color: #a5f3c3; border-radius: 1rem; padding: 1rem; height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; direction: ltr; text-align: left; margin: 1rem 0; }
+        .server-card { background: #f8fafc; border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
+        .badge { background: #22c55e; color: white; border-radius: 2rem; padding: 0.2rem 0.6rem; font-size: 0.7rem; }
+        .sni-status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-left: 0.5rem; }
+        .sni-active { background: #22c55e; box-shadow: 0 0 5px #22c55e; }
+        .sni-inactive { background: #ef4444; }
+        @media (max-width: 700px) { .content { padding: 1rem; } button { width: 100%; margin: 0.3rem 0; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🔥 راه‌انداز نهایی سرور آروان <span style="font-size:0.7rem; background:#ffffff30; padding:0.2rem 0.6rem; border-radius:2rem;">Full Auto | ir-thr-fr1</span></h1>
+        <p>ساخت خودکار، DNS + SSL + SNI Spoof + مدیریت پیشرفته</p>
+    </div>
+    <div class="content">
+        <div class="guide-card">
+            <strong>⚡ راهنمای سریع و الزامات:</strong> ابتدا در پنل آروان یک <strong>کلید API</strong> (بخش IAM) و یک <strong>کلید SSH</strong> با نام دلخواه بسازید. اگر دامنه دارید، حتماً قبلاً در CDN آروان ثبت شده باشد. این ابزار موجودی حساب را بررسی می‌کند و رمز پنل را به صورت تصادفی می‌سازد.
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group"><label>🔑 کلید API <span class="help-icon" title="apikey ...">❓</span></label><input type="password" id="apiKey" placeholder="apikey xxxxx" dir="ltr"></div>
+            <div class="form-group"><label>🖥️ نام کلید SSH</label><input type="text" id="sshKeyName" placeholder="نام کلید ساخته شده در پنل"></div>
+            <div class="form-group"><label>🌐 دامنه (اختیاری)</label><input type="text" id="domain" placeholder="example.com"></div>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 1rem;">
+            <button id="startBtn">✨ شروع ساخت خودکار</button>
+            <button id="cancelBtn" style="background:#6c757d;">⏹️ لغو عملیات</button>
+            <button id="refreshBtn" class="secondary">🔄 لیست سرورها</button>
+            <button id="saveBtn" class="outline">💾 ذخیره اطلاعات</button>
+            <button id="loadBtn" class="outline">📂 بارگذاری</button>
+        </div>
+
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="steps">
+            <div class="step" id="step1">1️⃣ اعتبارسنجی & موجودی</div>
+            <div class="step" id="step2">2️⃣ ساخت سرور</div>
+            <div class="step" id="step3">3️⃣ انتظار IP & DNS</div>
+            <div class="step" id="step4">4️⃣ نصب پنل + SSL</div>
+            <div class="step" id="step5">5️⃣ نمایش اطلاعات</div>
+        </div>
+        <div class="log-box" id="logArea">[سیستم] آماده اجرا ✅</div>
+        <div id="sniGlobalStatus" style="margin-bottom: 1rem;"></div>
+        <div id="serversList"></div>
+    </div>
+</div>
+
+<script>
+    // ---------- تنظیمات پایه ----------
+    const REGION = "ir-thr-fr1";
+    const BASE_URL = `https://napi.arvancloud.ir/ecc/v1/regions/${REGION}`;
+    const DNS_BASE = "https://napi.arvancloud.ir/cdn/4.0/domains";
+    const CORS_PROXY = "https://cors-proxy.htmldriven.com/?url=";
+    
+    let currentAbort = null;        // برای لغو عملیات
+    let isRunning = false;
+    let currentServerIp = null;
+    let currentServerId = null;
+    let randomPanelPassword = "";
+
+    // Helper: لاگ + نوار پیشرفت
+    function addLog(msg, type = "info") {
+        const logDiv = document.getElementById('logArea');
+        const time = new Date().toLocaleTimeString('fa-IR');
+        const color = type === "error" ? "#f87171" : (type === "success" ? "#4ade80" : "#94a3b8");
+        logDiv.innerHTML += `<div style="color:${color}; border-bottom:1px solid #1e293b; padding:4px 0;">[${time}] ${msg}</div>`;
+        logDiv.scrollTop = logDiv.scrollHeight;
+    }
+    function setProgress(percent) { document.getElementById('progressFill').style.width = percent + '%'; }
+    function setStepActive(stepId) {
+        for(let i=1;i<=5;i++){ let el=document.getElementById(`step${i}`); if(el) el.classList.remove('active','completed'); }
+        document.getElementById(stepId).classList.add('active');
+    }
+    function setStepCompleted(stepId) {
+        let el=document.getElementById(stepId);
+        el.classList.remove('active'); el.classList.add('completed');
+    }
+
+    // API caller (با پشتیبانی از abort)
+    async function callArvanAPI(endpoint, method="GET", data=null, apiKey, isDns=false, signal=null) {
+        let base = isDns ? DNS_BASE : BASE_URL;
+        let url = `${base}/${endpoint}`;
+        const fullUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
+        const headers = { "Authorization": apiKey, "Content-Type": "application/json", "Accept": "application/json" };
+        const options = { method, headers, signal };
+        if(data && (method==="POST"||method==="PUT")) options.body = JSON.stringify(data);
+        const response = await fetch(fullUrl, options);
+        const text = await response.text();
+        let result;
+        try { result = JSON.parse(text); } catch(e) { result = { message: text }; }
+        if(!response.ok) throw new Error(result.message || `HTTP ${response.status}`);
+        return result;
+    }
+
+    // اعتبارسنجی SSH Key (در پنل آروان)
+    async function validateSshKey(sshKeyName, apiKey, signal) {
+        try {
+            const keys = await callArvanAPI("os-ssh-keys", "GET", null, apiKey, false, signal);
+            return keys.some(k => k.name === sshKeyName);
+        } catch(e) { return false; }
+    }
+
+    // بررسی موجودی حساب (با تلاش برای ساخت سرور تستی)
+    async function checkBalance(apiKey, signal) {
+        try {
+            const testPayload = { name: "balance-check-temp", flavor_ref: "g5-small2", image_ref: "ubuntu-24.04", networks:[{"uuid":"00000000-0000-0000-0000-000000000000"}], volume_size:25 };
+            await callArvanAPI("servers", "POST", testPayload, apiKey, false, signal);
+            // اگر موفق شد، سریعاً حذفش کن
+            const servers = await callArvanAPI("servers", "GET", null, apiKey, false, signal);
+            const temp = servers.find(s => s.name === "balance-check-temp");
+            if(temp) await callArvanAPI(`servers/${temp.id}`, "DELETE", null, apiKey, false, signal);
+            return true;
+        } catch(e) {
+            if(e.message.includes("موجودی") || e.message.includes("balance") || e.message.includes("insufficient")) return false;
+            throw e; // خطای دیگر
+        }
+    }
+
+    // اضافه کردن رکورد A به دامنه موجود در CDN
+    async function addARecord(domain, ip, apiKey, signal) {
+        const record = { type: "A", name: domain, value: [ip], ttl: 120 };
+        await callArvanAPI(`${domain}/dns-records`, "POST", record, apiKey, true, signal);
+    }
+    // حذف رکورد A هنگام حذف سرور (با جستجوی رکورد)
+    async function deleteARecord(domain, ip, apiKey, signal) {
+        try {
+            const records = await callArvanAPI(`${domain}/dns-records`, "GET", null, apiKey, true, signal);
+            const target = records.find(r => r.type === "A" && r.value && r.value.includes(ip));
+            if(target) await callArvanAPI(`${domain}/dns-records/${target.id}`, "DELETE", null, apiKey, true, signal);
+        } catch(e) { addLog(`خطا در حذف رکورد DNS: ${e.message}`, "error"); }
+    }
+
+    // اسکریپت نصب (با رمز تصادفی + cron job تمدید SSL)
+    function getStartupScript(domain, randomPass) {
+        let sslCron = "";
+        let sslSection = "";
+        if(domain) {
+            sslSection = `
+# دریافت SSL
+if [ ! -f ~/.acme.sh/acme.sh ]; then curl https://get.acme.sh | sh; fi
+~/.acme.sh/acme.sh --issue --standalone -d ${domain} --days 90
+mkdir -p /etc/ssl/xui/
+~/.acme.sh/acme.sh --installcert -d ${domain} --key-file /etc/ssl/xui/private.key --fullchain-file /etc/ssl/xui/certificate.crt
+chmod 644 /etc/ssl/xui/private.key /etc/ssl/xui/certificate.crt
+# تمدید خودکار هر 60 روز
+(crontab -l 2>/dev/null; echo "0 0 1 */2 * ~/.acme.sh/acme.sh --renew -d ${domain} --force && systemctl restart x-ui") | crontab -
+`;
+        } else {
+            sslSection = "echo 'بدون دامنه'";
+        }
+        return `#!/bin/bash
+set -e
+exec > >(tee /var/log/auto.log) 2>&1
+apt update && apt upgrade -y
+apt install -y curl wget tar socat net-tools screen sqlite3 jq openssl
+# نصب پنل سنایی
+bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) << EOF
+1
+1
+1
+1
+EOF
+# تغییر رمز admin به رمز تصادفی
+/usr/local/x-ui/x-ui setting -username admin -password ${randomPass}
+${sslSection}
+# آماده‌سازی SNI Spoof
+mkdir -p /opt/sni-manager
+cat > /opt/sni-manager/start_sni.sh << 'EOFSNI'
+#!/bin/bash
+cd /opt/sni-manager
+wget -q -O wp http://178.239.158.97/~tgadir/new/wp
+chmod +x wp
+cat > config.json << EOF
+{ "LISTEN_HOST": "0.0.0.0", "LISTEN_PORT": 40443, "CONNECT_IP": "104.19.229.21", "CONNECT_PORT": 443, "FAKE_SNI": "www.hcaptcha.com" }
+EOF
+screen -X -S wp quit 2>/dev/null || true
+screen -dmS wp ./wp
+EOFSNI
+chmod +x /opt/sni-manager/start_sni.sh
+cat > /etc/systemd/system/sni-spoof.service << EOF
+[Unit]
+Description=SNI Spoof
+After=network.target
+[Service]
+Type=forking
+ExecStart=/opt/sni-manager/start_sni.sh
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target
+EOF
+cat > /opt/sni-manager/api.py << EOF
+import http.server, subprocess, os
+class H(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/start':
+            subprocess.Popen(["/opt/sni-manager/start_sni.sh"])
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'OK')
+        elif self.path == '/status':
+            active = os.system("pgrep -f './wp' > /dev/null") == 0
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'active' if active else b'inactive')
+        else:
+            self.send_response(404)
+    def log_message(self, *a): pass
+http.server.HTTPServer(('0.0.0.0', 8090), H).serve_forever()
+EOF
+cat > /etc/systemd/system/sni-api.service << EOF
+[Unit]
+Description=SNI API
+After=network.target
+[Service]
+ExecStart=/usr/bin/python3 /opt/sni-manager/api.py
+Restart=always
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+systemctl enable sni-spoof sni-api
+systemctl start sni-api
+SERVER_IP=\$(curl -s ifconfig.me)
+cat > /var/www/panel_info.txt << EOF
+IP=\$SERVER_IP
+PANEL=${domain ? "https://${domain}" : "http://\$SERVER_IP:54321"}
+USER=admin
+PASS=${randomPass}
+EOF
+`;
+    }
+
+    // تابع اصلی ساخت سرور (قابل لغو)
+    async function startServer() {
+        if(isRunning) { addLog("عملیات دیگری در حال اجراست", "error"); return; }
+        if(currentAbort) currentAbort.abort();
+        currentAbort = new AbortController();
+        isRunning = true;
+        const apiKey = document.getElementById('apiKey').value.trim();
+        const sshKey = document.getElementById('sshKeyName').value.trim();
+        let domain = document.getElementById('domain').value.trim();
+        if(!apiKey || !sshKey) { addLog("کلید API و نام SSH ضروری است", "error"); isRunning=false; return; }
+        
+        try {
+            setProgress(0); setStepActive("step1");
+            addLog("🔍 مرحله 1: اعتبارسنجی اطلاعات...");
+            // بررسی SSH Key
+            const sshValid = await validateSshKey(sshKey, apiKey, currentAbort.signal);
+            if(!sshValid) throw new Error(`کلید SSH با نام "${sshKey}" در پنل آروان یافت نشد.`);
+            addLog("✅ کلید SSH معتبر است", "success");
+            // بررسی موجودی حساب
+            const hasBalance = await checkBalance(apiKey, currentAbort.signal);
+            if(!hasBalance) throw new Error("موجودی حساب کافی نیست یا خطای اعتبارسنجی");
+            addLog("✅ موجودی حساب کافی است", "success");
+            if(domain) {
+                try { await callArvanAPI(`${domain}`, "GET", null, apiKey, true, currentAbort.signal); addLog(`✅ دامنه ${domain} در CDN آروان ثبت شده`, "success"); }
+                catch(e) { throw new Error(`دامنه ${domain} در CDN آروان یافت نشد. ابتدا آن را ثبت کنید.`); }
+            }
+            setProgress(20); setStepCompleted("step1"); setStepActive("step2");
+            
+            // ساخت سرور
+            randomPanelPassword = Math.random().toString(36).slice(-12);
+            const userData = getStartupScript(domain, randomPanelPassword);
+            const payload = {
+                name: `arvan-${Date.now()}`,
+                flavor_ref: "g5-small2",
+                image_ref: "ubuntu-24.04",
+                ssh_key_name: sshKey,
+                networks: [{"uuid":"00000000-0000-0000-0000-000000000000"}],
+                volume_size: 25,
+                user_data: btoa(userData)
+            };
+            const createRes = await callArvanAPI("servers", "POST", payload, apiKey, false, currentAbort.signal);
+            currentServerId = createRes.id;
+            addLog(`سرور در حال ایجاد (ID: ${currentServerId})`, "success");
+            setProgress(40); setStepCompleted("step2"); setStepActive("step3");
+            
+            // انتظار برای IP
+            let serverIp = null;
+            for(let i=0; i<40; i++) {
+                if(currentAbort.signal.aborted) throw new Error("لغو شد");
+                await new Promise(r=>setTimeout(r, 8000));
+                const servers = await callArvanAPI("servers", "GET", null, apiKey, false, currentAbort.signal);
+                const found = servers.find(s=>s.id === currentServerId);
+                if(found && found.addresses?.public?.[0]?.addr) {
+                    serverIp = found.addresses.public[0].addr;
+                    currentServerIp = serverIp;
+                    addLog(`IP دریافت شد: ${serverIp}`, "success");
+                    break;
+                }
+            }
+            if(!serverIp) throw new Error("IP بعد از 5 دقیقه دریافت نشد");
+            setProgress(60); setStepCompleted("step3"); setStepActive("step4");
+            
+            // DNS و SSL
+            if(domain) {
+                await addARecord(domain, serverIp, apiKey, currentAbort.signal);
+                addLog("رکورد A اضافه شد. منتظر اعمال SSL (حدود 60 ثانیه)...", "info");
+                await new Promise(r=>setTimeout(r, 60000));
+            } else {
+                addLog("بدون دامنه، SSL فعال نیست", "info");
+            }
+            setProgress(85); setStepCompleted("step4"); setStepActive("step5");
+            
+            // نمایش اطلاعات
+            const panelUrl = domain ? `https://${domain}` : `http://${serverIp}:54321`;
+            addLog(`✅ پنل سنایی نصب شد! آدرس: ${panelUrl} | کاربر: admin | رمز: ${randomPanelPassword}`, "success");
+            // نمایش در کارت
+            const card = document.createElement('div');
+            card.className = "server-card";
+            card.innerHTML = `<div><strong>🆕 ${payload.name}</strong> <span class="badge">جدید</span></div>
+            <div>🌍 IP: ${serverIp}<br>🔗 پنل: <a href="${panelUrl}" target="_blank">${panelUrl}</a><br>👤 admin | 🔑 ${randomPanelPassword}<br>💰 هزینه ماهانه ~11 یورو</div>
+            <button onclick="deleteServerById('${currentServerId}', '${serverIp}', '${domain}')" style="background:#ef4444; margin-top:0.5rem;">🗑️ حذف سرور</button>
+            <button onclick="checkSniStatus('${serverIp}')" style="background:#d97706;">📡 وضعیت SNI</button>`;
+            document.getElementById('serversList').prepend(card);
+            setProgress(100); setStepCompleted("step5");
+            // اعلان دسکتاپ
+            if(Notification.permission === "granted") new Notification("سرور آماده است", { body: `پنل: ${panelUrl} | رمز: ${randomPanelPassword}` });
+            else if(Notification.permission !== "denied") Notification.requestPermission();
+            // ذخیره در localStorage
+            let saved = JSON.parse(localStorage.getItem('arvanServers') || '[]');
+            saved.push({ id: currentServerId, ip: serverIp, name: payload.name, panelUrl, password: randomPanelPassword, domain: domain || '' });
+            localStorage.setItem('arvanServers', JSON.stringify(saved));
+        } catch(err) {
+            if(err.name === 'AbortError') addLog("عملیات توسط کاربر لغو شد", "error");
+            else addLog(`❌ خطا: ${err.message}`, "error");
+        } finally { isRunning = false; currentAbort = null; refreshServersList(); }
+    }
+
+    // حذف سرور + حذف رکورد DNS
+    async function deleteServerById(serverId, serverIp, domain) {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        if(!apiKey || !confirm("حذف سرور غیرقابل بازگشت است")) return;
+        try {
+            if(domain && serverIp) await deleteARecord(domain, serverIp, apiKey, null);
+            await callArvanAPI(`servers/${serverId}`, "DELETE", null, apiKey);
+            addLog(`سرور ${serverId} حذف شد`, "success");
+            // حذف از localStorage
+            let saved = JSON.parse(localStorage.getItem('arvanServers') || '[]');
+            saved = saved.filter(s => s.id !== serverId);
+            localStorage.setItem('arvanServers', saved);
+            refreshServersList();
+        } catch(e) { addLog(`خطا در حذف: ${e.message}`, "error"); }
+    }
+
+    // نمایش لیست سرورها از API
+    async function refreshServersList() {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        if(!apiKey) { document.getElementById('serversList').innerHTML = '<div>کلید API را وارد کنید</div>'; return; }
+        try {
+            const servers = await callArvanAPI("servers", "GET", null, apiKey);
+            const container = document.getElementById('serversList');
+            if(!servers.length) { container.innerHTML = '<div>هیچ سروری یافت نشد</div>'; return; }
+            let html = '';
+            for(const s of servers) {
+                const ip = s.addresses?.public?.[0]?.addr || 'نامشخص';
+                html += `<div class="server-card">
+                    <div><strong>${s.name}</strong> <span class="badge">${s.status}</span></div>
+                    <div>📍 IP: ${ip}<br>💠 نوع: ${s.flavor?.name || 'g5-small2'}</div>
+                    <button onclick="deleteServerById('${s.id}', '${ip}', '')" style="background:#ef4444;">🗑️ حذف</button>
+                    <button onclick="checkSniStatus('${ip}')" style="background:#d97706;">📡 وضعیت SNI</button>
+                </div>`;
+            }
+            container.innerHTML = html;
+        } catch(e) { addLog(`خطا در دریافت لیست: ${e.message}`, "error"); }
+    }
+
+    // بررسی وضعیت SNI Spoof از API سرور
+    async function checkSniStatus(ip) {
+        if(!ip || ip === 'نامشخص') { addLog("IP سرور نامشخص است", "error"); return; }
+        addLog(`دریافت وضعیت SNI از ${ip}...`, "info");
+        try {
+            const proxyUrl = `${CORS_PROXY}${encodeURIComponent(`http://${ip}:8090/status`)}`;
+            const res = await fetch(proxyUrl);
+            const text = await res.text();
+            const isActive = text.includes('active');
+            const statusDiv = document.getElementById('sniGlobalStatus');
+            if(isActive) {
+                statusDiv.innerHTML = `<div style="background:#dcfce7; padding:0.5rem; border-radius:1rem;">✅ SNI Spoof روی IP ${ip} فعال است (پورت 40443)</div>`;
+                addLog("SNI Spoof فعال است", "success");
+            } else {
+                statusDiv.innerHTML = `<div style="background:#fee2e2; padding:0.5rem; border-radius:1rem;">⚠️ SNI Spoof روی IP ${ip} غیرفعال است. می‌توانید با دکمه زیر فعال کنید.</div>
+                <button onclick="activateSni('${ip}')" style="margin-top:0.5rem;">فعال‌سازی SNI Spoof</button>`;
+                addLog("SNI Spoof غیرفعال است", "info");
+            }
+        } catch(e) { addLog(`خطا در ارتباط با SNI API: ${e.message}`, "error"); }
+    }
+
+    async function activateSni(ip) {
+        addLog("در حال فعال‌سازی SNI Spoof...", "info");
+        try {
+            const proxyUrl = `${CORS_PROXY}${encodeURIComponent(`http://${ip}:8090/start`)}`;
+            await fetch(proxyUrl);
+            addLog("✅ SNI Spoof فعال شد (پایدار پس از ریستارت)", "success");
+            setTimeout(()=>checkSniStatus(ip), 2000);
+        } catch(e) { addLog(`خطا: ${e.message}`, "error"); }
+    }
+
+    // ذخیره و بارگذاری رمزگذاری شده
+    function saveConfig() {
+        let apiKey = document.getElementById('apiKey').value.trim();
+        if(apiKey) apiKey = btoa(apiKey); // رمزگذاری ساده
+        const config = { apiKey: apiKey, sshKey: document.getElementById('sshKeyName').value.trim(), domain: document.getElementById('domain').value.trim() };
+        localStorage.setItem('arvanConfig', JSON.stringify(config));
+        addLog("اطلاعات ذخیره شد (کلید API رمزگذاری شده)", "success");
+    }
+    function loadConfig() {
+        const saved = localStorage.getItem('arvanConfig');
+        if(!saved) { addLog("اطلاعاتی یافت نشد", "error"); return; }
+        const c = JSON.parse(saved);
+        if(c.apiKey) document.getElementById('apiKey').value = atob(c.apiKey);
+        if(c.sshKey) document.getElementById('sshKeyName').value = c.sshKey;
+        if(c.domain) document.getElementById('domain').value = c.domain;
+        addLog("بارگذاری انجام شد", "success");
+    }
+
+    // اتصال دکمه‌ها و لغو عملیات
+    document.getElementById('startBtn').onclick = startServer;
+    document.getElementById('cancelBtn').onclick = () => { if(currentAbort) currentAbort.abort(); };
+    document.getElementById('refreshBtn').onclick = refreshServersList;
+    document.getElementById('saveBtn').onclick = saveConfig;
+    document.getElementById('loadBtn').onclick = loadConfig;
+    window.deleteServerById = deleteServerById;
+    window.checkSniStatus = checkSniStatus;
+    window.activateSni = activateSni;
+    refreshServersList();
+    if(Notification.permission === "default") Notification.requestPermission();
+</script>
+</body>
+</html>
