@@ -6,6 +6,7 @@
     <title>ArvanSpoof | مدیریت خودکار سرور آروان + SNI Spoof</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet">
     <style>
+        /* ---------- [Your existing CSS styles - UNCHANGED] ---------- */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Vazir', system-ui, sans-serif; }
         body { background: linear-gradient(145deg, #0b2b3b 0%, #1a4a5f 100%); padding: 1rem; min-height: 100vh; }
         .container { max-width: 1280px; margin: 0 auto; background: rgba(255,255,255,0.97); border-radius: 2rem; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
@@ -35,15 +36,14 @@
         .step { flex: 1; background: #f1f5f9; border-radius: 1rem; padding: 0.5rem; text-align: center; font-size: 0.7rem; border-bottom: 3px solid #cbd5e1; }
         .step.active { background: #fee2e2; border-bottom-color: #b91c1c; }
         .step.completed { background: #dcfce7; border-bottom-color: #16a34a; }
-        /* کنسول راست‌چین با قابلیت چپ‌چین برای محتوای انگلیسی */
         .log-box { background: #0f172a; color: #a5f3c3; border-radius: 1rem; padding: 1rem; height: 220px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; direction: rtl; text-align: right; margin: 1rem 0; }
-        .log-box div { direction: ltr; text-align: left; }  /* هر خط لاگ چپ‌چین بماند */
+        .log-box div { direction: ltr; text-align: left; }
         .server-card { background: #f8fafc; border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
         .badge { background: #22c55e; color: white; border-radius: 2rem; padding: 0.2rem 0.6rem; font-size: 0.7rem; }
-        .sni-status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-left: 0.5rem; }
         .copy-btn { background: #4b5563; font-size: 0.7rem; padding: 0.2rem 0.5rem; margin-right: 0.5rem; border-radius: 1rem; }
         .faq { margin-top: 2rem; background: #f9fafb; border-radius: 1rem; padding: 1rem; font-size: 0.8rem; }
         .faq summary { font-weight: bold; cursor: pointer; margin: 0.5rem 0; }
+        .price-card { background: #dcfce7; border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; border-right: 4px solid #16a34a; }
         @media (max-width: 700px) { .content { padding: 1rem; } button { width: 100%; margin: 0.3rem 0; } }
     </style>
 </head>
@@ -59,7 +59,7 @@
             🔹 <strong>دریافت کلید API:</strong> <a href="https://panel.arvancloud.ir" target="_blank">پنل آروان</a> → تنظیمات → IAM → ماشین یوزرها → ساخت ماشین یوزر (مثال: <code>dsfkferf34</code>) → کلید مانند <code>apikey ...</code> را کپی کنید.<br>
             🔹 <strong>ساخت کلید SSH:</strong> در پنل آروان → تنظیمات → کلیدهای SSH → ساخت کلید جدید → نام دلخواه (مثلاً <code>my-key</code>).<br>
             🔹 <strong>دامنه (اختیاری):</strong> حتماً ابتدا دامنه را به <a href="https://www.arvancloud.ir/fa/cdn" target="_blank">CDN آروان</a> اضافه کنید.<br>
-            🔹 <strong>هزینه ماهانه:</strong> پلن <code>g5-small2</code> حدود 11 یورو – ارزان‌ترین در ir-thr-fr1.
+            🔹 <strong>هزینه ماهانه سرور:</strong> پلن <code>g5-small2</code> (1 هسته CPU، 2 گیگابایت RAM، 25 گیگابایت SSD) حدود <strong>11 یورو</strong> (معادل <strong>۳۵۴,۹۰۰ تومان</strong>) – ارزان‌ترین گزینه در دیتاسنتر ir-thr-fr1.
         </div>
 
         <div class="form-grid">
@@ -73,6 +73,7 @@
             <div class="form-group">
                 <label>🖥️ نام کلید SSH <span class="help-icon" title="نام کلید SSH ساخته شده در پنل آروان">❓</span></label>
                 <input type="text" id="sshKeyName" placeholder="مثال: my-key" value="my-key">
+                <div id="sshKeyCheckResult" style="font-size:0.7rem; margin-top:0.2rem;"></div>
             </div>
             <div class="form-group">
                 <label>🌐 دامنه (اختیاری) <span class="help-icon" title="فقط دامنه‌های ثبت‌شده در CDN آروان">❓</span></label>
@@ -100,6 +101,7 @@
         <div class="log-box" id="logArea">
             <div style="direction: ltr; text-align: left;">[سیستم] آماده اجرا ✅ - لطفاً کلید API واقعی خود را جایگزین نمونه کنید.</div>
         </div>
+        <div id="priceConfirmArea"></div>
         <div id="sniGlobalStatus" style="margin-bottom: 1rem;"></div>
         <div id="serversList"></div>
 
@@ -107,18 +109,22 @@
             <details><summary>❓ چگونه کلید API معتبر بسازم؟</summary>
             وارد پنل آروان → تنظیمات → IAM → ماشین یوزرها → «ساخت ماشین یوزر» → نام دلخواه → پس از ساخت کلید را ذخیره کنید.</details>
             <details><summary>❓ چرا خطای «SSH key not found» می‌گیرم؟</summary>
-            نام کلید SSH باید دقیقاً با نامی که در پنل آروان ثبت کرده‌اید مطابقت داشته باشد.</details>
+            نام کلید SSH باید دقیقاً با نامی که در پنل آروان ثبت کرده‌اید مطابقت داشته باشد. همچنین مطمئن شوید که کلید SSH را در پنل آروان ساخته باشید.</details>
             <details><summary>❓ آیا می‌توانم از دامنه‌ای استفاده کنم که در آروان ثبت نکرده‌ام؟</summary>
             خیر. برای خودکارسازی DNS و SSL، دامنه باید قبلاً در CDN آروان فعال شده باشد.</details>
             <details><summary>❓ چگونه SNI Spoof را فعال کنم؟</summary>
             پس از ساخت سرور، روی دکمه «وضعیت SNI» کلیک کنید و در صورت غیرفعال بودن، دکمه فعال‌سازی ظاهر می‌شود.</details>
+            <details><summary>❓ قیمت نهایی سرور چقدر است؟</summary>
+            پلن g5-small2 با مشخصات 1 هسته CPU، 2 گیگابایت RAM و 25 گیگابایت SSD حدود 11 یورو (۳۵۴,۹۰۰ تومان) در ماه هزینه دارد.</details>
         </div>
     </div>
 </div>
 
 <script>
-    // -------------------- تنظیمات پایه --------------------
+    // ---------- تنظیمات پایه ----------
     const REGION = "ir-thr-fr1";
+    const PRICE_EUR = "11.00 یورو";
+    const PRICE_IRR = "۳۵۴,۹۰۰ تومان";
     const BASE_URL = `https://napi.arvancloud.ir/ecc/v1/regions/${REGION}`;
     const DNS_BASE = "https://napi.arvancloud.ir/cdn/4.0/domains";
     const CORS_PROXY = "https://cors-proxy.htmldriven.com/?url=";
@@ -128,18 +134,11 @@
     let currentServerIp = null;
     let currentServerId = null;
     let randomPanelPassword = "";
+    let sshKeyValid = false; // وضعیت اعتبارسنجی SSH Key
+    let domainValid = false; // وضعیت اعتبارسنجی دامنه
+    let apiKeyValid = false; // وضعیت اعتبارسنجی کلید API
 
-    // دکمه نمایش کلید API
-    window.toggleApiKeyVisibility = function() {
-        const input = document.getElementById('apiKey');
-        if (input.type === 'password') {
-            input.type = 'text';
-        } else {
-            input.type = 'password';
-        }
-    }
-
-    // Helper: لاگ (هر خط داخل div با direction ltr)
+    // --- توابع کمکی ---
     function addLog(msg, type = "info") {
         const logDiv = document.getElementById('logArea');
         const time = new Date().toLocaleTimeString('fa-IR');
@@ -155,11 +154,6 @@
         logDiv.scrollTop = logDiv.scrollHeight;
     }
 
-    function clearLog() {
-        document.getElementById('logArea').innerHTML = '';
-        addLog("لاگ پاک شد", "info");
-    }
-
     function setProgress(percent) { document.getElementById('progressFill').style.width = percent + '%'; }
     function setStepActive(stepId) {
         for(let i=1;i<=5;i++){ let el=document.getElementById(`step${i}`); if(el) el.classList.remove('active','completed'); }
@@ -170,6 +164,16 @@
         el.classList.remove('active'); el.classList.add('completed');
     }
 
+    // نمایش/مخفی‌سازی کلید API
+    window.toggleApiKeyVisibility = function() {
+        const input = document.getElementById('apiKey');
+        if (input.type === 'password') {
+            input.type = 'text';
+        } else {
+            input.type = 'password';
+        }
+    }
+
     // API caller با پشتیبانی از abort
     async function callArvanAPI(endpoint, method="GET", data=null, apiKey, isDns=false, signal=null) {
         let base = isDns ? DNS_BASE : BASE_URL;
@@ -178,33 +182,63 @@
         const headers = { "Authorization": apiKey, "Content-Type": "application/json", "Accept": "application/json" };
         const options = { method, headers, signal };
         if(data && (method==="POST"||method==="PUT")) options.body = JSON.stringify(data);
+        const startTime = performance.now();
         const response = await fetch(fullUrl, options);
+        const endTime = performance.now();
+        const duration = ((endTime - startTime) / 1000).toFixed(2);
         const text = await response.text();
         let result;
         try { result = JSON.parse(text); } catch(e) { result = { message: text }; }
         if(!response.ok) throw new Error(result.message || `HTTP ${response.status}`);
+        addLog(`⏱️ ${method} ${endpoint} - زمان پاسخ: ${duration} ثانیه`, "info");
         return result;
     }
 
     // اعتبارسنجی SSH Key
     async function validateSshKey(sshKeyName, apiKey, signal) {
+        const checkDiv = document.getElementById('sshKeyCheckResult');
         try {
+            addLog(`🔍 بررسی کلید SSH با نام "${sshKeyName}"...`, "info");
             const keys = await callArvanAPI("os-ssh-keys", "GET", null, apiKey, false, signal);
-            return keys.some(k => k.name === sshKeyName);
-        } catch(e) { return false; }
+            if (!Array.isArray(keys)) {
+                checkDiv.innerHTML = '<span style="color:red;">❌ خطا در دریافت لیست کلیدهای SSH</span>';
+                return false;
+            }
+            const isValid = keys.some(k => k.name === sshKeyName);
+            if (isValid) {
+                checkDiv.innerHTML = '<span style="color:green;">✅ کلید SSH معتبر است</span>';
+                addLog("✅ کلید SSH معتبر است", "success");
+                return true;
+            } else {
+                checkDiv.innerHTML = '<span style="color:red;">❌ کلید SSH یافت نشد. لطفاً نام کلید را بررسی کنید یا در پنل آروان کلید بسازید.</span>';
+                addLog(`❌ کلید SSH با نام "${sshKeyName}" در پنل آروان یافت نشد.`, "error");
+                return false;
+            }
+        } catch(e) {
+            checkDiv.innerHTML = `<span style="color:red;">❌ خطا در بررسی کلید SSH: ${e.message}</span>`;
+            addLog(`❌ خطا در بررسی کلید SSH: ${e.message}`, "error");
+            return false;
+        }
     }
 
     // بررسی موجودی حساب با ساخت تستی و حذف فوری
     async function checkBalance(apiKey, signal) {
+        const startTime = Date.now();
         try {
+            addLog("💰 در حال بررسی موجودی حساب...", "info");
             const testPayload = { name: "balance-check-temp", flavor_ref: "g5-small2", image_ref: "ubuntu-24.04", networks:[{"uuid":"00000000-0000-0000-0000-000000000000"}], volume_size:25 };
             await callArvanAPI("servers", "POST", testPayload, apiKey, false, signal);
             const servers = await callArvanAPI("servers", "GET", null, apiKey, false, signal);
             const temp = servers.find(s => s.name === "balance-check-temp");
             if(temp) await callArvanAPI(`servers/${temp.id}`, "DELETE", null, apiKey, false, signal);
+            const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+            addLog(`✅ موجودی حساب کافی است (بررسی در ${duration} ثانیه)`, "success");
             return true;
         } catch(e) {
-            if(e.message.includes("موجودی") || e.message.includes("balance") || e.message.includes("insufficient")) return false;
+            if(e.message.includes("موجودی") || e.message.includes("balance") || e.message.includes("insufficient") || e.message.includes("credit")) {
+                addLog("❌ موجودی حساب کافی نیست. لطفاً حساب خود را شارژ کنید.", "error");
+                return false;
+            }
             throw e;
         }
     }
@@ -214,13 +248,44 @@
         const record = { type: "A", name: domain, value: [ip], ttl: 120 };
         await callArvanAPI(`${domain}/dns-records`, "POST", record, apiKey, true, signal);
     }
+    
     // حذف رکورد A
     async function deleteARecord(domain, ip, apiKey, signal) {
         try {
             const records = await callArvanAPI(`${domain}/dns-records`, "GET", null, apiKey, true, signal);
             const target = records.find(r => r.type === "A" && r.value && r.value.includes(ip));
             if(target) await callArvanAPI(`${domain}/dns-records/${target.id}`, "DELETE", null, apiKey, true, signal);
-        } catch(e) { addLog(`خطا در حذف DNS: ${e.message}`, "error"); }
+        } catch(e) { addLog(`⚠️ خطا در حذف DNS: ${e.message}`, "error"); }
+    }
+
+    // نمایش کارت قیمت و دریافت تأیید کاربر
+    async function showPriceConfirmation(apiKey, sshKey, domain) {
+        return new Promise((resolve) => {
+            const priceDiv = document.getElementById('priceConfirmArea');
+            priceDiv.innerHTML = `
+                <div class="price-card">
+                    <h3>💰 تأییدیه هزینه نهایی</h3>
+                    <p><strong>پلن انتخابی:</strong> g5-small2 (اقتصادی‌ترین گزینه در دیتاسنتر ir-thr-fr1)</p>
+                    <p><strong>مشخصات سرور:</strong> 1 هسته CPU، 2 گیگابایت RAM، 25 گیگابایت SSD</p>
+                    <p><strong>هزینه ماهانه:</strong> <span style="font-size:1.2rem;">${PRICE_EUR} (معادل ${PRICE_IRR})</span></p>
+                    <p><strong>هزینه نصب:</strong> رایگان</p>
+                    <p><strong>کل هزینه ماه اول:</strong> ${PRICE_EUR}</p>
+                    <p style="font-size:0.8rem; color:#4b5563;">⏱️ زمان تقریبی راه‌اندازی سرور: 3-4 دقیقه</p>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem; justify-content: center;">
+                        <button id="confirmPriceYes" style="background:#16a34a;">✅ بله، سرور را بساز</button>
+                        <button id="confirmPriceNo" style="background:#6c757d;">❌ نه، انصراف</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('confirmPriceYes').onclick = () => {
+                priceDiv.innerHTML = '';
+                resolve(true);
+            };
+            document.getElementById('confirmPriceNo').onclick = () => {
+                priceDiv.innerHTML = '';
+                resolve(false);
+            };
+        });
     }
 
     // اسکریپت نصب (با رمز تصادفی + cron job تمدید SSL)
@@ -328,6 +393,7 @@ EOF
         const sshKey = document.getElementById('sshKeyName').value.trim();
         let domain = document.getElementById('domain').value.trim();
         
+        // اعتبارسنجی کلید API نمونه
         if(apiKey === "apikey 6d8343fb-998e-5621-b0b7-7814340b991c") {
             addLog("⚠️ شما از کلید API نمونه استفاده می‌کنید. لطفاً آن را با کلید واقعی خود جایگزین کنید.", "error");
             isRunning = false;
@@ -335,21 +401,54 @@ EOF
         }
         if(!apiKey || !sshKey) { addLog("کلید API و نام SSH ضروری است", "error"); isRunning=false; return; }
         
+        const totalStartTime = Date.now();
+        
         try {
             setProgress(0); setStepActive("step1");
-            addLog("🔍 مرحله 1: اعتبارسنجی اطلاعات...");
-            const sshValid = await validateSshKey(sshKey, apiKey, currentAbort.signal);
-            if(!sshValid) throw new Error(`کلید SSH با نام "${sshKey}" در پنل آروان یافت نشد. لطفاً نام را بررسی کنید.`);
-            addLog("✅ کلید SSH معتبر است", "success");
-            const hasBalance = await checkBalance(apiKey, currentAbort.signal);
-            if(!hasBalance) throw new Error("موجودی حساب کافی نیست یا خطای اعتبارسنجی. لطفاً حساب خود را شارژ کنید.");
-            addLog("✅ موجودی حساب کافی است", "success");
-            if(domain) {
-                try { await callArvanAPI(`${domain}`, "GET", null, apiKey, true, currentAbort.signal); addLog(`✅ دامنه ${domain} در CDN آروان ثبت شده`, "success"); }
-                catch(e) { throw new Error(`دامنه ${domain} در CDN آروان یافت نشد. ابتدا آن را از طریق پنل آروان اضافه کنید.`); }
-            }
-            setProgress(20); setStepCompleted("step1"); setStepActive("step2");
+            addLog("🔍 مرحله 1: اعتبارسنجی اطلاعات...", "info");
             
+            // 1. اعتبارسنجی کلید API
+            try {
+                await callArvanAPI("servers", "GET", null, apiKey, false, currentAbort.signal);
+                apiKeyValid = true;
+                addLog("✅ کلید API معتبر است", "success");
+            } catch(e) {
+                apiKeyValid = false;
+                throw new Error("کلید API نامعتبر است. لطفاً کلید را بررسی کنید.");
+            }
+            
+            // 2. اعتبارسنجی SSH Key
+            sshKeyValid = await validateSshKey(sshKey, apiKey, currentAbort.signal);
+            if(!sshKeyValid) throw new Error(`کلید SSH با نام "${sshKey}" در پنل آروان یافت نشد. لطفاً ابتدا یک کلید SSH در پنل بسازید.`);
+            
+            // 3. اعتبارسنجی موجودی حساب
+            const hasBalance = await checkBalance(apiKey, currentAbort.signal);
+            if(!hasBalance) throw new Error("موجودی حساب کافی نیست. لطفاً حساب خود را شارژ کنید.");
+            
+            // 4. اعتبارسنجی دامنه (اختیاری)
+            if(domain) {
+                try {
+                    await callArvanAPI(`${domain}`, "GET", null, apiKey, true, currentAbort.signal);
+                    domainValid = true;
+                    addLog(`✅ دامنه ${domain} در CDN آروان ثبت شده`, "success");
+                } catch(e) {
+                    domainValid = false;
+                    throw new Error(`دامنه ${domain} در CDN آروان یافت نشد. ابتدا آن را از طریق پنل آروان اضافه کنید.`);
+                }
+            }
+            setProgress(20); setStepCompleted("step1");
+            
+            // نمایش کارت قیمت و دریافت تأیید کاربر
+            const userConfirmed = await showPriceConfirmation(apiKey, sshKey, domain);
+            if (!userConfirmed) {
+                addLog("عملیات ساخت سرور توسط کاربر لغو شد", "error");
+                isRunning = false;
+                return;
+            }
+            
+            setStepActive("step2");
+            
+            // ساخت سرور
             randomPanelPassword = Math.random().toString(36).slice(-12);
             const userData = getStartupScript(domain, randomPanelPassword);
             const payload = {
@@ -366,6 +465,7 @@ EOF
             addLog(`سرور در حال ایجاد (ID: ${currentServerId})`, "success");
             setProgress(40); setStepCompleted("step2"); setStepActive("step3");
             
+            // انتظار برای IP
             let serverIp = null;
             for(let i=0; i<40; i++) {
                 if(currentAbort.signal.aborted) throw new Error("لغو شد");
@@ -382,6 +482,7 @@ EOF
             if(!serverIp) throw new Error("IP بعد از 5 دقیقه دریافت نشد. ممکن است سرور با مشکل مواجه شده باشد.");
             setProgress(60); setStepCompleted("step3"); setStepActive("step4");
             
+            // DNS و SSL
             if(domain) {
                 await addARecord(domain, serverIp, apiKey, currentAbort.signal);
                 addLog("رکورد A اضافه شد. منتظر اعمال SSL (حدود 60 ثانیه)...", "info");
@@ -391,17 +492,24 @@ EOF
             }
             setProgress(85); setStepCompleted("step4"); setStepActive("step5");
             
+            // نمایش اطلاعات
             const panelUrl = domain ? `https://${domain}` : `http://${serverIp}:54321`;
+            const totalDuration = ((Date.now() - totalStartTime) / 1000).toFixed(2);
             addLog(`✅ پنل سنایی نصب شد! آدرس: ${panelUrl} | کاربر: admin | رمز: ${randomPanelPassword}`, "success");
+            addLog(`⏱️ زمان کل عملیات: ${totalDuration} ثانیه`, "success");
+            
             addServerCard(currentServerId, serverIp, payload.name, panelUrl, randomPanelPassword, domain);
             setProgress(100); setStepCompleted("step5");
             
+            // اعلان دسکتاپ
             if(Notification.permission === "granted") new Notification("سرور آماده است", { body: `پنل: ${panelUrl} | رمز: ${randomPanelPassword}` });
             else if(Notification.permission !== "denied") Notification.requestPermission();
             
+            // ذخیره در localStorage
             let saved = JSON.parse(localStorage.getItem('arvanServers') || '[]');
             saved.push({ id: currentServerId, ip: serverIp, name: payload.name, panelUrl, password: randomPanelPassword, domain: domain || '' });
             localStorage.setItem('arvanServers', JSON.stringify(saved));
+            
         } catch(err) {
             if(err.name === 'AbortError') addLog("عملیات توسط کاربر لغو شد", "error");
             else addLog(`❌ خطا: ${err.message}`, "error");
@@ -417,7 +525,7 @@ EOF
             <div>🌍 IP: ${ip} <button class="copy-btn" onclick="copyToClipboard('${ip}')">📋 کپی IP</button></div>
             <div>🔗 پنل: <a href="${panelUrl}" target="_blank">${panelUrl}</a></div>
             <div>👤 admin | 🔑 ${password} <button class="copy-btn" onclick="copyToClipboard('${password}')">📋 کپی رمز</button></div>
-            <div>💰 هزینه ماهانه ~11 یورو</div>
+            <div>💰 هزینه ماهانه: ${PRICE_EUR} (${PRICE_IRR})</div>
             <button onclick="deleteServerById('${id}', '${ip}', '${domain}')" style="background:#ef4444; margin-top:0.5rem;">🗑️ حذف سرور</button>
             <button onclick="checkSniStatus('${ip}')" style="background:#d97706;">📡 وضعیت SNI</button>
         `;
@@ -452,6 +560,7 @@ EOF
                     <div><strong>${s.name}</strong> <span class="badge">${s.status}</span></div>
                     <div>📍 IP: ${ip} <button class="copy-btn" onclick="copyToClipboard('${ip}')">📋 کپی IP</button></div>
                     <div>💠 نوع: ${s.flavor?.name || 'g5-small2'}</div>
+                    <div>💰 هزینه ماهانه: ${PRICE_EUR}</div>
                     <button onclick="deleteServerById('${s.id}', '${ip}', '')" style="background:#ef4444;">🗑️ حذف</button>
                     <button onclick="checkSniStatus('${ip}')" style="background:#d97706;">📡 وضعیت SNI</button>
                 </div>`;
@@ -495,6 +604,11 @@ EOF
         addLog(`📋 متن کپی شد: ${text}`, "success");
     }
 
+    function clearLog() {
+        document.getElementById('logArea').innerHTML = '';
+        addLog("لاگ پاک شد", "info");
+    }
+
     function saveConfig() {
         let apiKey = document.getElementById('apiKey').value.trim();
         if(apiKey) apiKey = btoa(apiKey);
@@ -502,6 +616,7 @@ EOF
         localStorage.setItem('arvanConfig', JSON.stringify(config));
         addLog("اطلاعات ذخیره شد (کلید API رمزگذاری شده)", "success");
     }
+    
     function loadConfig() {
         const saved = localStorage.getItem('arvanConfig');
         if(!saved) { addLog("اطلاعاتی یافت نشد", "error"); return; }
@@ -512,6 +627,7 @@ EOF
         addLog("بارگذاری انجام شد", "success");
     }
 
+    // اتصال دکمه‌ها
     document.getElementById('startBtn').onclick = startServer;
     document.getElementById('cancelBtn').onclick = () => { if(currentAbort) currentAbort.abort(); };
     document.getElementById('refreshBtn').onclick = refreshServersList;
@@ -522,6 +638,7 @@ EOF
     window.checkSniStatus = checkSniStatus;
     window.activateSni = activateSni;
     window.copyToClipboard = copyToClipboard;
+    
     refreshServersList();
     if(Notification.permission === "default") Notification.requestPermission();
 </script>
