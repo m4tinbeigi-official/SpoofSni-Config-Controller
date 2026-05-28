@@ -16,9 +16,12 @@
         .guide-card a { color: #b91c1c; text-decoration: none; }
         .guide-card a:hover { text-decoration: underline; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px,1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
-        .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.3rem; position: relative; }
         label { font-weight: bold; display: flex; gap: 0.3rem; align-items: center; }
         .help-icon { cursor: help; background: #e0e7ff; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #1e3c72; }
+        .password-wrapper { display: flex; align-items: center; gap: 0.5rem; }
+        .password-wrapper input { flex: 1; }
+        .eye-btn { background: transparent; border: none; cursor: pointer; font-size: 1.2rem; padding: 0; margin: 0; color: #4b5563; width: 2rem; }
         input { padding: 0.7rem; border: 2px solid #e2e8f0; border-radius: 1rem; font-size: 0.9rem; transition: 0.2s; direction: ltr; text-align: left; }
         input:focus { border-color: #b91c1c; outline: none; box-shadow: 0 0 0 3px rgba(185,28,28,0.1); }
         button { background: #b91c1c; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 2rem; font-weight: bold; cursor: pointer; transition: 0.2s; margin: 0.2rem; }
@@ -32,12 +35,13 @@
         .step { flex: 1; background: #f1f5f9; border-radius: 1rem; padding: 0.5rem; text-align: center; font-size: 0.7rem; border-bottom: 3px solid #cbd5e1; }
         .step.active { background: #fee2e2; border-bottom-color: #b91c1c; }
         .step.completed { background: #dcfce7; border-bottom-color: #16a34a; }
-        .log-box { background: #0f172a; color: #a5f3c3; border-radius: 1rem; padding: 1rem; height: 220px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; direction: ltr; text-align: left; margin: 1rem 0; }
+        /* کنسول راست‌چین با قابلیت چپ‌چین برای محتوای انگلیسی */
+        .log-box { background: #0f172a; color: #a5f3c3; border-radius: 1rem; padding: 1rem; height: 220px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; direction: rtl; text-align: right; margin: 1rem 0; }
+        .log-box div { direction: ltr; text-align: left; }  /* هر خط لاگ چپ‌چین بماند */
         .server-card { background: #f8fafc; border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
         .badge { background: #22c55e; color: white; border-radius: 2rem; padding: 0.2rem 0.6rem; font-size: 0.7rem; }
         .sni-status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-left: 0.5rem; }
-        .sni-active { background: #22c55e; box-shadow: 0 0 5px #22c55e; }
-        .sni-inactive { background: #ef4444; }
+        .copy-btn { background: #4b5563; font-size: 0.7rem; padding: 0.2rem 0.5rem; margin-right: 0.5rem; border-radius: 1rem; }
         .faq { margin-top: 2rem; background: #f9fafb; border-radius: 1rem; padding: 1rem; font-size: 0.8rem; }
         .faq summary { font-weight: bold; cursor: pointer; margin: 0.5rem 0; }
         @media (max-width: 700px) { .content { padding: 1rem; } button { width: 100%; margin: 0.3rem 0; } }
@@ -50,21 +54,21 @@
         <p>خرید خودکار ارزان‌ترین سرور ir-thr-fr1 | نصب پنل سنایی + SSL + SNI Spoof (hcaptcha)</p>
     </div>
     <div class="content">
-        <!-- راهنمای کامل با لینک‌های مفید -->
         <div class="guide-card">
-            <strong>📘 آموزش گام‌به‌گام (کلیک کنید):</strong><br>
-            🔹 <strong>دریافت کلید API:</strong> وارد <a href="https://panel.arvancloud.ir" target="_blank">پنل آروان</a> → تنظیمات → IAM → ماشین یوزرها → ساخت ماشین یوزر.  
-            نام: <code>dsfkferf34</code> (نمایشی: <code>تست</code>) → کلید ساخته می‌شود مانند <code>apikey 6d8343fb-998e-5621-b0b7-7814340b991c</code> → <a href="https://docs.arvancloud.ir/fa/developer-tools/api/api-usage" target="_blank">مستندات رسمی</a><br>
-            🔹 <strong>ساخت کلید SSH:</strong> در پنل آروان → تنظیمات → کلیدهای SSH → ساخت کلید جدید → نام دلخواه (مثلاً <code>my-key</code>) → <a href="https://docs.arvancloud.ir/fa/products/iaas/ssh-keys" target="_blank">راهنما</a><br>
-            🔹 <strong>دامنه (اختیاری):</strong> اگر دامنه دارید، ابتدا آن را به <a href="https://www.arvancloud.ir/fa/cdn" target="_blank">CDN آروان</a> اضافه کنید. سپس ابزار خودکار رکورد A و SSL را انجام می‌دهد.<br>
-            🔹 <strong>هزینه ماهانه سرور:</strong> پلن <code>g5-small2</code> (1CPU, 2GB RAM, 25GB SSD) حدود <strong>11 یورو</strong> – ارزان‌ترین گزینه در دیتاسنتر ir-thr-fr1.<br>
-            🔹 <strong>SNI Spoof:</strong> سرویسی که ترافیک شما را شبیه‌سازی می‌کند (فیک SNI: <code>www.hcaptcha.com</code>) روی پورت 40443 – پس از فعال‌سازی حتی بعد از ریستارت سرور پایدار می‌ماند.
+            <strong>📘 آموزش سریع:</strong><br>
+            🔹 <strong>دریافت کلید API:</strong> <a href="https://panel.arvancloud.ir" target="_blank">پنل آروان</a> → تنظیمات → IAM → ماشین یوزرها → ساخت ماشین یوزر (مثال: <code>dsfkferf34</code>) → کلید مانند <code>apikey ...</code> را کپی کنید.<br>
+            🔹 <strong>ساخت کلید SSH:</strong> در پنل آروان → تنظیمات → کلیدهای SSH → ساخت کلید جدید → نام دلخواه (مثلاً <code>my-key</code>).<br>
+            🔹 <strong>دامنه (اختیاری):</strong> حتماً ابتدا دامنه را به <a href="https://www.arvancloud.ir/fa/cdn" target="_blank">CDN آروان</a> اضافه کنید.<br>
+            🔹 <strong>هزینه ماهانه:</strong> پلن <code>g5-small2</code> حدود 11 یورو – ارزان‌ترین در ir-thr-fr1.
         </div>
 
         <div class="form-grid">
             <div class="form-group">
                 <label>🔑 کلید API <span class="help-icon" title="از پنل آروان، بخش IAM دریافت کنید">❓</span></label>
-                <input type="password" id="apiKey" placeholder="apikey 6d8343fb-998e-5621-b0b7-7814340b991c" dir="ltr" value="apikey 6d8343fb-998e-5621-b0b7-7814340b991c">
+                <div class="password-wrapper">
+                    <input type="password" id="apiKey" placeholder="apikey 6d8343fb-998e-5621-b0b7-7814340b991c" dir="ltr" value="apikey 6d8343fb-998e-5621-b0b7-7814340b991c">
+                    <button type="button" class="eye-btn" onclick="toggleApiKeyVisibility()">👁️</button>
+                </div>
             </div>
             <div class="form-group">
                 <label>🖥️ نام کلید SSH <span class="help-icon" title="نام کلید SSH ساخته شده در پنل آروان">❓</span></label>
@@ -82,6 +86,7 @@
             <button id="refreshBtn" class="secondary">🔄 لیست سرورها</button>
             <button id="saveBtn" class="outline">💾 ذخیره اطلاعات</button>
             <button id="loadBtn" class="outline">📂 بارگذاری</button>
+            <button id="clearLogBtn" class="outline">🗑️ پاک کردن لاگ</button>
         </div>
 
         <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
@@ -92,24 +97,21 @@
             <div class="step" id="step4">4️⃣ نصب پنل + SSL</div>
             <div class="step" id="step5">5️⃣ نمایش اطلاعات</div>
         </div>
-        <div class="log-box" id="logArea">[سیستم] آماده اجرا ✅ - لطفاً کلید API واقعی خود را جایگزین نمونه کنید.</div>
+        <div class="log-box" id="logArea">
+            <div style="direction: ltr; text-align: left;">[سیستم] آماده اجرا ✅ - لطفاً کلید API واقعی خود را جایگزین نمونه کنید.</div>
+        </div>
         <div id="sniGlobalStatus" style="margin-bottom: 1rem;"></div>
         <div id="serversList"></div>
 
-        <!-- بخش پرسش‌های متداول (توضیحات بیشتر) -->
         <div class="faq">
             <details><summary>❓ چگونه کلید API معتبر بسازم؟</summary>
-            وارد پنل آروان شوید → تنظیمات → IAM → ماشین یوزرها → «ساخت ماشین یوزر» → نام دلخواه (مثلاً dsfkferf34) → پس از ساخت، کلیدی به فرمت <code>apikey xxxxx-xxxx-...</code> نمایش داده می‌شود که فقط یک بار قابل مشاهده است. آن را ذخیره کنید.</details>
+            وارد پنل آروان → تنظیمات → IAM → ماشین یوزرها → «ساخت ماشین یوزر» → نام دلخواه → پس از ساخت کلید را ذخیره کنید.</details>
             <details><summary>❓ چرا خطای «SSH key not found» می‌گیرم؟</summary>
-            نام کلید SSH باید دقیقاً با نامی که در پنل آروان (بخش کلیدهای SSH) ثبت کرده‌اید مطابقت داشته باشد. به حروف بزرگ و کوچک و فاصله‌ها دقت کنید.</details>
+            نام کلید SSH باید دقیقاً با نامی که در پنل آروان ثبت کرده‌اید مطابقت داشته باشد.</details>
             <details><summary>❓ آیا می‌توانم از دامنه‌ای استفاده کنم که در آروان ثبت نکرده‌ام؟</summary>
-            خیر. برای افزودن خودکار رکورد A و دریافت SSL، دامنه شما باید قبلاً در سرویس DNS/CDN آروان فعال شده باشد. در غیر این صورت، مراحل DNS و SSL انجام نمی‌شود و فقط پنل با IP قابل دسترس است.</details>
-            <details><summary>❓ چگونه SNI Spoof را بعد از ساخت فعال کنم؟</summary>
-            پس از اتمام ساخت سرور، در کارت همان سرور دکمه «وضعیت SNI» را بزنید. اگر غیرفعال بود، دکمه «فعال‌سازی» ظاهر می‌شود. با یک کلیک، سرویس روی پورت 40443 راه‌اندازی می‌شود و حتی پس از ریبوت سرور نیز اجرا می‌ماند.</details>
-            <details><summary>❓ هزینه ماهانه چقدر است و از کجا بفهمم؟</summary>
-            پلن انتخاب‌شده <code>g5-small2</code> با 1CPU، 2GB RAM، 25GB SSD قیمتی حدود 11 یورو در ماه دارد. برای اطلاع دقیق از قیمت‌های به‌روز به <a href="https://www.arvancloud.ir/fa/products/iaas" target="_blank">صفحه محصول IaaS آروان</a> مراجعه کنید.</details>
-            <details><summary>❓ آیا می‌توانم سرور را حذف کنم؟</summary>
-            بله. در لیست سرورها، روی دکمه «حذف سرور» کلیک کنید. ابزار به طور خودکار رکورد DNS مربوطه (در صورت وجود) را نیز پاک می‌کند.</details>
+            خیر. برای خودکارسازی DNS و SSL، دامنه باید قبلاً در CDN آروان فعال شده باشد.</details>
+            <details><summary>❓ چگونه SNI Spoof را فعال کنم؟</summary>
+            پس از ساخت سرور، روی دکمه «وضعیت SNI» کلیک کنید و در صورت غیرفعال بودن، دکمه فعال‌سازی ظاهر می‌شود.</details>
         </div>
     </div>
 </div>
@@ -127,14 +129,37 @@
     let currentServerId = null;
     let randomPanelPassword = "";
 
-    // Helper: لاگ + نوار پیشرفت
+    // دکمه نمایش کلید API
+    window.toggleApiKeyVisibility = function() {
+        const input = document.getElementById('apiKey');
+        if (input.type === 'password') {
+            input.type = 'text';
+        } else {
+            input.type = 'password';
+        }
+    }
+
+    // Helper: لاگ (هر خط داخل div با direction ltr)
     function addLog(msg, type = "info") {
         const logDiv = document.getElementById('logArea');
         const time = new Date().toLocaleTimeString('fa-IR');
         const color = type === "error" ? "#f87171" : (type === "success" ? "#4ade80" : "#94a3b8");
-        logDiv.innerHTML += `<div style="color:${color}; border-bottom:1px solid #1e293b; padding:4px 0;">[${time}] ${msg}</div>`;
+        const logLine = document.createElement('div');
+        logLine.style.color = color;
+        logLine.style.borderBottom = "1px solid #1e293b";
+        logLine.style.padding = "4px 0";
+        logLine.style.direction = "ltr";
+        logLine.style.textAlign = "left";
+        logLine.innerText = `[${time}] ${msg}`;
+        logDiv.appendChild(logLine);
         logDiv.scrollTop = logDiv.scrollHeight;
     }
+
+    function clearLog() {
+        document.getElementById('logArea').innerHTML = '';
+        addLog("لاگ پاک شد", "info");
+    }
+
     function setProgress(percent) { document.getElementById('progressFill').style.width = percent + '%'; }
     function setStepActive(stepId) {
         for(let i=1;i<=5;i++){ let el=document.getElementById(`step${i}`); if(el) el.classList.remove('active','completed'); }
@@ -209,7 +234,6 @@ if [ ! -f ~/.acme.sh/acme.sh ]; then curl https://get.acme.sh | sh; fi
 mkdir -p /etc/ssl/xui/
 ~/.acme.sh/acme.sh --installcert -d ${domain} --key-file /etc/ssl/xui/private.key --fullchain-file /etc/ssl/xui/certificate.crt
 chmod 644 /etc/ssl/xui/private.key /etc/ssl/xui/certificate.crt
-# تمدید خودکار هر 60 روز
 (crontab -l 2>/dev/null; echo "0 0 1 */2 * ~/.acme.sh/acme.sh --renew -d ${domain} --force && systemctl restart x-ui") | crontab -
 `;
         } else {
@@ -220,17 +244,14 @@ set -e
 exec > >(tee /var/log/auto.log) 2>&1
 apt update && apt upgrade -y
 apt install -y curl wget tar socat net-tools screen sqlite3 jq openssl
-# نصب پنل سنایی
 bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) << EOF
 1
 1
 1
 1
 EOF
-# تغییر رمز admin به رمز تصادفی
 /usr/local/x-ui/x-ui setting -username admin -password ${randomPass}
 ${sslSection}
-# آماده‌سازی SNI Spoof
 mkdir -p /opt/sni-manager
 cat > /opt/sni-manager/start_sni.sh << 'EOFSNI'
 #!/bin/bash
@@ -307,7 +328,6 @@ EOF
         const sshKey = document.getElementById('sshKeyName').value.trim();
         let domain = document.getElementById('domain').value.trim();
         
-        // هشدار اگر از کلید نمونه استفاده می‌کند
         if(apiKey === "apikey 6d8343fb-998e-5621-b0b7-7814340b991c") {
             addLog("⚠️ شما از کلید API نمونه استفاده می‌کنید. لطفاً آن را با کلید واقعی خود جایگزین کنید.", "error");
             isRunning = false;
@@ -330,7 +350,6 @@ EOF
             }
             setProgress(20); setStepCompleted("step1"); setStepActive("step2");
             
-            // ساخت سرور
             randomPanelPassword = Math.random().toString(36).slice(-12);
             const userData = getStartupScript(domain, randomPanelPassword);
             const payload = {
@@ -347,7 +366,6 @@ EOF
             addLog(`سرور در حال ایجاد (ID: ${currentServerId})`, "success");
             setProgress(40); setStepCompleted("step2"); setStepActive("step3");
             
-            // انتظار برای IP
             let serverIp = null;
             for(let i=0; i<40; i++) {
                 if(currentAbort.signal.aborted) throw new Error("لغو شد");
@@ -364,7 +382,6 @@ EOF
             if(!serverIp) throw new Error("IP بعد از 5 دقیقه دریافت نشد. ممکن است سرور با مشکل مواجه شده باشد.");
             setProgress(60); setStepCompleted("step3"); setStepActive("step4");
             
-            // DNS و SSL
             if(domain) {
                 await addARecord(domain, serverIp, apiKey, currentAbort.signal);
                 addLog("رکورد A اضافه شد. منتظر اعمال SSL (حدود 60 ثانیه)...", "info");
@@ -374,21 +391,14 @@ EOF
             }
             setProgress(85); setStepCompleted("step4"); setStepActive("step5");
             
-            // نمایش اطلاعات
             const panelUrl = domain ? `https://${domain}` : `http://${serverIp}:54321`;
             addLog(`✅ پنل سنایی نصب شد! آدرس: ${panelUrl} | کاربر: admin | رمز: ${randomPanelPassword}`, "success");
-            const card = document.createElement('div');
-            card.className = "server-card";
-            card.innerHTML = `<div><strong>🆕 ${payload.name}</strong> <span class="badge">جدید</span></div>
-            <div>🌍 IP: ${serverIp}<br>🔗 پنل: <a href="${panelUrl}" target="_blank">${panelUrl}</a><br>👤 admin | 🔑 ${randomPanelPassword}<br>💰 هزینه ماهانه ~11 یورو</div>
-            <button onclick="deleteServerById('${currentServerId}', '${serverIp}', '${domain}')" style="background:#ef4444; margin-top:0.5rem;">🗑️ حذف سرور</button>
-            <button onclick="checkSniStatus('${serverIp}')" style="background:#d97706;">📡 وضعیت SNI</button>`;
-            document.getElementById('serversList').prepend(card);
+            addServerCard(currentServerId, serverIp, payload.name, panelUrl, randomPanelPassword, domain);
             setProgress(100); setStepCompleted("step5");
-            // اعلان دسکتاپ
+            
             if(Notification.permission === "granted") new Notification("سرور آماده است", { body: `پنل: ${panelUrl} | رمز: ${randomPanelPassword}` });
             else if(Notification.permission !== "denied") Notification.requestPermission();
-            // ذخیره در localStorage
+            
             let saved = JSON.parse(localStorage.getItem('arvanServers') || '[]');
             saved.push({ id: currentServerId, ip: serverIp, name: payload.name, panelUrl, password: randomPanelPassword, domain: domain || '' });
             localStorage.setItem('arvanServers', JSON.stringify(saved));
@@ -398,7 +408,22 @@ EOF
         } finally { isRunning = false; currentAbort = null; refreshServersList(); }
     }
 
-    // حذف سرور + حذف رکورد DNS
+    function addServerCard(id, ip, name, panelUrl, password, domain) {
+        const container = document.getElementById('serversList');
+        const card = document.createElement('div');
+        card.className = "server-card";
+        card.innerHTML = `
+            <div><strong>🆕 ${name}</strong> <span class="badge">جدید</span></div>
+            <div>🌍 IP: ${ip} <button class="copy-btn" onclick="copyToClipboard('${ip}')">📋 کپی IP</button></div>
+            <div>🔗 پنل: <a href="${panelUrl}" target="_blank">${panelUrl}</a></div>
+            <div>👤 admin | 🔑 ${password} <button class="copy-btn" onclick="copyToClipboard('${password}')">📋 کپی رمز</button></div>
+            <div>💰 هزینه ماهانه ~11 یورو</div>
+            <button onclick="deleteServerById('${id}', '${ip}', '${domain}')" style="background:#ef4444; margin-top:0.5rem;">🗑️ حذف سرور</button>
+            <button onclick="checkSniStatus('${ip}')" style="background:#d97706;">📡 وضعیت SNI</button>
+        `;
+        container.prepend(card);
+    }
+
     async function deleteServerById(serverId, serverIp, domain) {
         const apiKey = document.getElementById('apiKey').value.trim();
         if(!apiKey || !confirm("حذف سرور غیرقابل بازگشت است. ادامه می‌دهید؟")) return;
@@ -413,7 +438,6 @@ EOF
         } catch(e) { addLog(`خطا در حذف: ${e.message}`, "error"); }
     }
 
-    // نمایش لیست سرورها از API
     async function refreshServersList() {
         const apiKey = document.getElementById('apiKey').value.trim();
         if(!apiKey) { document.getElementById('serversList').innerHTML = '<div>کلید API را وارد کنید</div>'; return; }
@@ -426,7 +450,8 @@ EOF
                 const ip = s.addresses?.public?.[0]?.addr || 'نامشخص';
                 html += `<div class="server-card">
                     <div><strong>${s.name}</strong> <span class="badge">${s.status}</span></div>
-                    <div>📍 IP: ${ip}<br>💠 نوع: ${s.flavor?.name || 'g5-small2'}</div>
+                    <div>📍 IP: ${ip} <button class="copy-btn" onclick="copyToClipboard('${ip}')">📋 کپی IP</button></div>
+                    <div>💠 نوع: ${s.flavor?.name || 'g5-small2'}</div>
                     <button onclick="deleteServerById('${s.id}', '${ip}', '')" style="background:#ef4444;">🗑️ حذف</button>
                     <button onclick="checkSniStatus('${ip}')" style="background:#d97706;">📡 وضعیت SNI</button>
                 </div>`;
@@ -435,7 +460,6 @@ EOF
         } catch(e) { addLog(`خطا در دریافت لیست: ${e.message}`, "error"); }
     }
 
-    // بررسی وضعیت SNI Spoof از API سرور
     async function checkSniStatus(ip) {
         if(!ip || ip === 'نامشخص') { addLog("IP سرور نامشخص است", "error"); return; }
         addLog(`دریافت وضعیت SNI از ${ip}...`, "info");
@@ -466,7 +490,11 @@ EOF
         } catch(e) { addLog(`خطا: ${e.message}`, "error"); }
     }
 
-    // ذخیره و بارگذاری رمزگذاری شده
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text);
+        addLog(`📋 متن کپی شد: ${text}`, "success");
+    }
+
     function saveConfig() {
         let apiKey = document.getElementById('apiKey').value.trim();
         if(apiKey) apiKey = btoa(apiKey);
@@ -484,15 +512,16 @@ EOF
         addLog("بارگذاری انجام شد", "success");
     }
 
-    // اتصال دکمه‌ها
     document.getElementById('startBtn').onclick = startServer;
     document.getElementById('cancelBtn').onclick = () => { if(currentAbort) currentAbort.abort(); };
     document.getElementById('refreshBtn').onclick = refreshServersList;
     document.getElementById('saveBtn').onclick = saveConfig;
     document.getElementById('loadBtn').onclick = loadConfig;
+    document.getElementById('clearLogBtn').onclick = clearLog;
     window.deleteServerById = deleteServerById;
     window.checkSniStatus = checkSniStatus;
     window.activateSni = activateSni;
+    window.copyToClipboard = copyToClipboard;
     refreshServersList();
     if(Notification.permission === "default") Notification.requestPermission();
 </script>
